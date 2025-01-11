@@ -1,7 +1,7 @@
-import React, { useState } from "react";
-import { Text, View, TouchableOpacity, StyleSheet } from "react-native";
+import React from "react";
+import { Text, View, TouchableOpacity, StyleSheet, Image } from "react-native";
 
-const TaskItem = ({ title, isDone, onToggle }) => {
+const TaskItem = ({ title, isDone, image, onToggle }) => {
   return (
     <TouchableOpacity
       style={[
@@ -10,9 +10,12 @@ const TaskItem = ({ title, isDone, onToggle }) => {
       ]}
       onPress={onToggle}
     >
-      <Text style={[styles.taskText, isDone && styles.taskTextDone]}>
-        {title}
-      </Text>
+      {image && <Image source={{ uri: image }} style={styles.taskImage} />}
+      <View style={styles.textContainer}>
+        <Text style={[styles.taskText, isDone && styles.taskTextDone]}>
+          {title}
+        </Text>
+      </View>
       <View
         style={[
           styles.taskBubble,
@@ -26,7 +29,6 @@ const TaskItem = ({ title, isDone, onToggle }) => {
 const styles = StyleSheet.create({
   taskContainer: {
     flexDirection: "row",
-    justifyContent: "space-between",
     alignItems: "center",
     padding: 15,
     marginBottom: 10,
@@ -37,6 +39,10 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 2,
+  },
+  textContainer: {
+    flex: 1,
+    marginLeft: 10,
   },
   taskText: {
     fontSize: 18,
@@ -52,6 +58,11 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     borderWidth: 2,
     borderColor: "#3498db",
+  },
+  taskImage: {
+    width: 50,
+    height: 50,
+    borderRadius: 10,
   },
 });
 

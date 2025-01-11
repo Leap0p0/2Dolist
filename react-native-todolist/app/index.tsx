@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Text, View, StyleSheet, FlatList, TouchableOpacity } from "react-native";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import TaskItem from "@/components/TaskItem";
 import AddTaskModal from "@/components/AddTaskModel";
 
@@ -7,12 +8,44 @@ export default function Index() {
   const [tasks, setTasks] = useState([]); // Liste des tâches
   const [isModalVisible, setIsModalVisible] = useState(false); // État de la modal
 
-  const addTask = (title) => {
+  // Clé pour AsyncStorage
+  const TASKS_STORAGE_KEY = "@tasks";
+
+  // Charger les tâches au démarrage
+  useEffect(() => {
+    const loadTasks = async () => {
+      try {
+        const storedTasks = await AsyncStorage.getItem(TASKS_STORAGE_KEY);
+        if (storedTasks) {
+          setTasks(JSON.parse(storedTasks));
+        }
+      } catch (e) {
+        console.error("Erreur lors du chargement des tâches :", e);
+      }
+    };
+
+    loadTasks();
+  }, []);
+
+  // Sauvegarder les tâches chaque fois qu'elles changent
+  useEffect(() => {
+    const saveTasks = async () => {
+      try {
+        await AsyncStorage.setItem(TASKS_STORAGE_KEY, JSON.stringify(tasks));
+      } catch (e) {
+        console.error("Erreur lors de la sauvegarde des tâches :", e);
+      }
+    };
+
+    saveTasks();
+  }, [tasks]);
+
+  const addTask = (title, image) => {
     setTasks((prevTasks) => [
       ...prevTasks,
-      { id: Date.now().toString(), title, isDone: false },
+      { id: Date.now().toString(), title, isDone: false, image }, // Ajoutez image ici
     ]);
-  };
+  };  
 
   const toggleTask = (id) => {
     setTasks((prevTasks) =>
@@ -20,7 +53,7 @@ export default function Index() {
         .map((task) =>
           task.id === id ? { ...task, isDone: !task.isDone } : task
         )
-        .sort((a, b) => a.isDone - b.isDone) // Trier : tâches actives en haut
+        .sort((a, b) => a.isDone - b.isDone)
     );
   };
 
@@ -34,6 +67,7 @@ export default function Index() {
           <TaskItem
             title={item.title}
             isDone={item.isDone}
+            image={item.image}  // Passer l'image ici
             onToggle={() => toggleTask(item.id)}
           />
         )}
@@ -42,6 +76,9 @@ export default function Index() {
           <Text style={styles.emptyText}>Ajoutez une première tâche !</Text>
         }
       />
+
+
+
 
       {/* Bouton flottant */}
       <TouchableOpacity
