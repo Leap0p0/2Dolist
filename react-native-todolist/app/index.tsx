@@ -3,28 +3,22 @@ import { Text, View, StyleSheet, FlatList, TouchableOpacity } from "react-native
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import TaskItem from "@/components/TaskItem";
 import AddTaskModal from "@/components/AddTaskModel";
+import TaskDetailModal from "@/components/TaskDetailModal";
 
 export default function Index() {
   const [tasks, setTasks] = useState([]); // Liste des tâches
   const [isModalVisible, setIsModalVisible] = useState(false); // État de la modal
+  const [selectedTask, setSelectedTask] = useState(null); // Tâche sélectionnée pour la vue détaillée
 
-  // Clés pour AsyncStorage
+  // Clé pour AsyncStorage
   const TASKS_STORAGE_KEY = "@tasks";
-  const LAST_RESET_DATE_KEY = "@lastResetDate";
 
-  // Charger les tâches au démarrage et vérifier la réinitialisation
+  // Charger les tâches au démarrage
   useEffect(() => {
-    const loadTasksAndCheckReset = async () => {
+    const loadTasks = async () => {
       try {
         const storedTasks = await AsyncStorage.getItem(TASKS_STORAGE_KEY);
-        const storedDate = await AsyncStorage.getItem(LAST_RESET_DATE_KEY);
-        const today = new Date().toDateString();
-
-        // Si la date enregistrée est différente d'aujourd'hui, réinitialiser
-        if (storedDate !== today) {
-          await AsyncStorage.setItem(LAST_RESET_DATE_KEY, today); // Met à jour la date
-          setTasks([]); // Réinitialise les tâches
-        } else if (storedTasks) {
+        if (storedTasks) {
           setTasks(JSON.parse(storedTasks));
         }
       } catch (e) {
@@ -32,7 +26,7 @@ export default function Index() {
       }
     };
 
-    loadTasksAndCheckReset();
+    loadTasks();
   }, []);
 
   // Sauvegarder les tâches chaque fois qu'elles changent
@@ -51,7 +45,7 @@ export default function Index() {
   const addTask = (title, image) => {
     setTasks((prevTasks) => [
       ...prevTasks,
-      { id: Date.now().toString(), title, isDone: false, image },
+      { id: Date.now().toString(), title, isDone: false, image }, // Ajoutez image ici
     ]);
   };
 
@@ -65,6 +59,9 @@ export default function Index() {
     );
   };
 
+  const openTaskDetails = (task) => setSelectedTask(task);
+  const closeTaskDetails = () => setSelectedTask(null);
+
   return (
     <View style={styles.container}>
       <Text style={styles.header}>À faire :</Text>
@@ -75,8 +72,9 @@ export default function Index() {
           <TaskItem
             title={item.title}
             isDone={item.isDone}
-            image={item.image}
+            image={item.image}  // Passer l'image ici
             onToggle={() => toggleTask(item.id)}
+            onLongPress={() => openTaskDetails(item)} // Ajout de onLongPress
           />
         )}
         contentContainerStyle={styles.list}
@@ -99,6 +97,18 @@ export default function Index() {
         onClose={() => setIsModalVisible(false)}
         onAddTask={addTask}
       />
+
+      {/* Modal de visualisation des tâches */}
+      {selectedTask && (
+        <TaskDetailModal
+        task={selectedTask}
+        onClose={closeTaskDetails}
+        onToggle={() => {
+          toggleTask(selectedTask.id);
+          closeTaskDetails(); // Ferme la vue détaillée après basculement
+        }}
+      />      
+      )}
     </View>
   );
 }

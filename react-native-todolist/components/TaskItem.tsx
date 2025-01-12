@@ -1,7 +1,7 @@
 import React from "react";
 import { Text, View, TouchableOpacity, StyleSheet, Image } from "react-native";
 
-const TaskItem = ({ title, isDone, image, onToggle }) => {
+const TaskItem = ({ title, isDone, image, onToggle, onLongPress }) => {
   return (
     <TouchableOpacity
       style={[
@@ -9,6 +9,7 @@ const TaskItem = ({ title, isDone, image, onToggle }) => {
         { opacity: isDone ? 0.5 : 1 },
       ]}
       onPress={onToggle}
+      onLongPress={onLongPress} // Ajout de l'appui long
     >
       {image && <Image source={{ uri: image }} style={styles.taskImage} />}
       <View style={styles.textContainer}>
