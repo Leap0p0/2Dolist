@@ -8,15 +8,23 @@ export default function Index() {
   const [tasks, setTasks] = useState([]); // Liste des tâches
   const [isModalVisible, setIsModalVisible] = useState(false); // État de la modal
 
-  // Clé pour AsyncStorage
+  // Clés pour AsyncStorage
   const TASKS_STORAGE_KEY = "@tasks";
+  const LAST_RESET_DATE_KEY = "@lastResetDate";
 
-  // Charger les tâches au démarrage
+  // Charger les tâches au démarrage et vérifier la réinitialisation
   useEffect(() => {
-    const loadTasks = async () => {
+    const loadTasksAndCheckReset = async () => {
       try {
         const storedTasks = await AsyncStorage.getItem(TASKS_STORAGE_KEY);
-        if (storedTasks) {
+        const storedDate = await AsyncStorage.getItem(LAST_RESET_DATE_KEY);
+        const today = new Date().toDateString();
+
+        // Si la date enregistrée est différente d'aujourd'hui, réinitialiser
+        if (storedDate !== today) {
+          await AsyncStorage.setItem(LAST_RESET_DATE_KEY, today); // Met à jour la date
+          setTasks([]); // Réinitialise les tâches
+        } else if (storedTasks) {
           setTasks(JSON.parse(storedTasks));
         }
       } catch (e) {
@@ -24,7 +32,7 @@ export default function Index() {
       }
     };
 
-    loadTasks();
+    loadTasksAndCheckReset();
   }, []);
 
   // Sauvegarder les tâches chaque fois qu'elles changent
@@ -43,9 +51,9 @@ export default function Index() {
   const addTask = (title, image) => {
     setTasks((prevTasks) => [
       ...prevTasks,
-      { id: Date.now().toString(), title, isDone: false, image }, // Ajoutez image ici
+      { id: Date.now().toString(), title, isDone: false, image },
     ]);
-  };  
+  };
 
   const toggleTask = (id) => {
     setTasks((prevTasks) =>
@@ -67,7 +75,7 @@ export default function Index() {
           <TaskItem
             title={item.title}
             isDone={item.isDone}
-            image={item.image}  // Passer l'image ici
+            image={item.image}
             onToggle={() => toggleTask(item.id)}
           />
         )}
@@ -76,9 +84,6 @@ export default function Index() {
           <Text style={styles.emptyText}>Ajoutez une première tâche !</Text>
         }
       />
-
-
-
 
       {/* Bouton flottant */}
       <TouchableOpacity
